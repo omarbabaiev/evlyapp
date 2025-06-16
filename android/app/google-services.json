@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "121119611908",
+    "project_id": "evly-home",
+    "storage_bucket": "evly-home.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:121119611908:android:e87e3ab0679946dcb86951",
+        "android_client_info": {
+          "package_name": "com.omarbabayev.evlyapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "121119611908-erecv3sj7otu20n7khn4jeinf8mscocq.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.omarbabayev.evlyapp",
+            "certificate_hash": "5ec604b490ed35bb0cf1f5abfea1cb937925cdd9"
+          }
+        },
+        {
+          "client_id": "121119611908-drea06rjfnc2958cd9qua4vioagbf366.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCs5X75KKCjYjhjTd35aTih-gRtFOGVvzc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "121119611908-drea06rjfnc2958cd9qua4vioagbf366.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "121119611908-f42paa9c2kq9tn1a5a6dcip9b8ojq0ph.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.evly.app"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

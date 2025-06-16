@@ -1,0 +1,62 @@
+name: evlyapp
+description: "A new Flutter project."
+publish_to: 'none'
+version: 0.1.0
+
+environment:
+  sdk: ^3.5.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.6
+  get: ^4.6.6 # GetX bağımlılığı
+  google_fonts: ^6.2.1 # Google Fonts bağımlılığı
+  firebase_core: ^2.24.2 # Firebase Core bağımlılığı
+  google_sign_in: ^6.2.1 # Google Sign-In bağımlılığı
+  firebase_auth: ^4.15.3 # Firebase Auth bağımlılığı
+  carousel_slider: ^5.1.1 # Carousel Slider bağımlılığı
+  image_picker: ^1.1.2 # Yeni eklenen Image Picker bağımlılığı
+  cloud_firestore: ^4.13.6 # Yeni eklenen Cloud Firestore bağımlılığı
+  get_storage: ^2.0.1 # Yeni eklenen GetStorage bağımlılığı
+  flutter_native_splash: ^2.4.1 # Native splash screen
+  firebase_storage: ^11.5.6 # Firebase Storage for images
+  skeletonizer: ^1.4.2 # Skeleton loading animation
+  connectivity_plus: ^5.0.2
+  cached_network_image: ^3.4.1
+  intl: ^0.20.2
+  fluttertoast: ^8.2.4
+  page_transition: ^2.1.0
+  encrypt: ^5.0.3 # Encryption package
+  sentry_flutter: ^7.16.1 # Sentry integration
+  flutter_image_compress: ^2.1.0 # Image compression
+  path_provider: ^2.1.2 # Path provider for temporary files
+  url_launcher: ^6.2.5 # URL launcher for phone calls
+
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/
+    - assets/images/
+
+flutter_native_splash:
+  color: "#FFFFFF"
+  image: assets/images/splash.png
+  color_dark: "#FFFFFF"
+  image_dark: assets/images/splash.png
+  android_12:
+    image: assets/images/splash.png
+    color: "#FFFFFF"
+    icon_background_color: "#FFFFFF"
+  ios: true
+  android: true
+  web: false
+  android_gravity: center
+  ios_content_mode: center
+  fullscreen: true
