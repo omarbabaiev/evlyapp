@@ -12,6 +12,7 @@ import '../../screens/listing_detail_screen.dart';
 import '../../screens/my_listings_screen.dart';
 import '../../screens/search_screen.dart';
 import '../../screens/filter_screen.dart';
+import '../../screens/settings_screen.dart';
 
 import '../../controllers/listing_controller.dart';
 import '../../services/listing_stats_service.dart';
@@ -42,5 +43,6 @@ class AppPages {
     GetPage(name: '/my-listings', page: () => const MyListingsScreen()),
     GetPage(name: '/search', page: () => const SearchScreen()),
     GetPage(name: '/filter', page: () => const FilterScreen()),
+    GetPage(name: '/settings', page: () => const SettingsScreen()),
   ];
 }

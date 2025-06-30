@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class CustomErrorWidget extends StatelessWidget {
   final String message;
@@ -27,7 +28,7 @@ class CustomErrorWidget extends StatelessWidget {
             Text(
               message,
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: GoogleFonts.poppins(
                 fontSize: 16,
                 color: Colors.red,
               ),

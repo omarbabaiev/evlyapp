@@ -310,14 +310,15 @@ class _ImageViewScreenState extends State<ImageViewScreen> {
 
                     // Call button
                     Container(
+                      padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
+                        shape: BoxShape.circle,
                         gradient: LinearGradient(
                           colors: [
                             AppColors.primary,
-                            AppColors.primary.withOpacity(0.8),
+                            Colors.green,
                           ],
                         ),
-                        borderRadius: BorderRadius.circular(12),
                         boxShadow: [
                           BoxShadow(
                             color: AppColors.primary.withOpacity(0.3),
@@ -327,33 +328,20 @@ class _ImageViewScreenState extends State<ImageViewScreen> {
                         ],
                       ),
                       child: Material(
+                        shape: CircleBorder(),
                         color: Colors.transparent,
                         child: InkWell(
+                          customBorder: CircleBorder(),
                           onTap: () => _makePhoneCall(widget.listing.phone),
-                          borderRadius: BorderRadius.circular(12),
                           child: Padding(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 20,
                               vertical: 12,
                             ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(
-                                  Icons.phone,
-                                  color: Colors.white,
-                                  size: 20,
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'Zəng et',
-                                  style: GoogleFonts.poppins(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
+                            child: const Icon(
+                              Icons.phone,
+                              color: Colors.white,
+                              size: 20,
                             ),
                           ),
                         ),

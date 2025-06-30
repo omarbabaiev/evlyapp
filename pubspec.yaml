@@ -21,7 +21,7 @@ dependencies:
   get_storage: ^2.0.1 # Yeni eklenen GetStorage bağımlılığı
   flutter_native_splash: ^2.4.1 # Native splash screen
   firebase_storage: ^11.5.6 # Firebase Storage for images
-  skeletonizer: ^1.4.2 # Skeleton loading animation
+  skeletonizer: ^2.0.1 # Skeleton loading animation - yükseltildi
   connectivity_plus: ^5.0.2
   cached_network_image: ^3.4.1
   intl: ^0.20.2

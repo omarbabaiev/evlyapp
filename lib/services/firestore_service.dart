@@ -118,47 +118,203 @@ class FirestoreService extends GetxService {
     }
   }
 
-  // Listing operations
-  Future<List<ListingModel>> getAllListings({int limit = 20}) async {
+  // İstifadəçi davranış izləmə
+  Future<void> trackUserView(
+      String userId, String listingId, String category) async {
+    try {
+      await _firestore.collection('user_behaviors').add({
+        'userId': userId,
+        'listingId': listingId,
+        'category': category,
+        'action': 'view',
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      print('Error tracking user view: $e');
+    }
+  }
+
+  Future<void> trackSearchQuery(String userId, String query) async {
+    try {
+      await _firestore.collection('user_behaviors').add({
+        'userId': userId,
+        'searchQuery': query,
+        'action': 'search',
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      print('Error tracking search: $e');
+    }
+  }
+
+  // İstifadəçi üçün tövsiyə alqoritmi
+  Future<Map<String, double>> getUserPreferences(String userId) async {
+    try {
+      final behaviors = await _firestore
+          .collection('user_behaviors')
+          .where('userId', isEqualTo: userId)
+          .orderBy('timestamp', descending: true)
+          .limit(100)
+          .get();
+
+      Map<String, double> preferences = {};
+
+      for (var doc in behaviors.docs) {
+        final data = doc.data();
+        if (data['category'] != null) {
+          String category = data['category'];
+          preferences[category] = (preferences[category] ?? 0) + 1;
+        }
+      }
+
+      // Normallaşdır (0-1 arası)
+      if (preferences.isNotEmpty) {
+        double maxValue = preferences.values.reduce((a, b) => a > b ? a : b);
+        preferences.updateAll((key, value) => value / maxValue);
+      }
+
+      return preferences;
+    } catch (e) {
+      print('Error getting user preferences: $e');
+      return {};
+    }
+  }
+
+  // Freshness factor hesablama
+  double _calculateFreshnessScore(DateTime createdAt) {
+    final now = DateTime.now();
+    final difference = now.difference(createdAt);
+
+    if (difference.inHours <= 24) {
+      return 1.0; // Son 24 saat - maksimum skor
+    } else if (difference.inDays <= 7) {
+      return 0.7; // Son həftə - yüksək skor
+    } else if (difference.inDays <= 30) {
+      return 0.4; // Son ay - orta skor
+    } else {
+      return 0.1; // Köhnə elanlar - aşağı skor
+    }
+  }
+
+  // Keyfiyyət skoru hesablama
+  double _calculateQualityScore(ListingModel listing) {
+    double score = 0.0;
+
+    // Şəkil sayı (max 0.3)
+    double imageScore = (listing.images.length / 10).clamp(0.0, 0.3);
+    score += imageScore;
+
+    // Təsvir uzunluğu (max 0.2)
+    double descriptionScore =
+        (listing.description.length / 500).clamp(0.0, 0.2);
+    score += descriptionScore;
+
+    // Əlavə məlumatlar (max 0.3)
+    double detailsScore = 0.0;
+    if (listing.district != null && listing.district!.isNotEmpty)
+      detailsScore += 0.1;
+    if (listing.ownerName != null && listing.ownerName!.isNotEmpty)
+      detailsScore += 0.1;
+    if (listing.details != null && listing.details!.isNotEmpty)
+      detailsScore += 0.1;
+    score += detailsScore;
+
+    // Qiymət məntiqiliyi (max 0.2)
+    if (listing.price > 100 && listing.price < 1000000) {
+      score += 0.2;
+    }
+
+    return score.clamp(0.0, 1.0);
+  }
+
+  // Smart listing alqoritmi
+  Future<List<ListingModel>> getSmartListings({
+    String? userId,
+    int limit = 20,
+  }) async {
+    try {
+      // Bütün elanları al
+      final querySnapshot = await _firestore
+          .collection(AppConstants.collectionListings)
+          .orderBy('createdAt', descending: true)
+          .limit(100)
+          .get();
+
+      List<ListingModel> listings = querySnapshot.docs
+          .map((doc) => ListingModel.fromFirestore(doc))
+          .toList();
+
+      // İstifadəçi preferences al
+      Map<String, double> userPreferences = {};
+      if (userId != null) {
+        userPreferences = await getUserPreferences(userId);
+      }
+
+      // Hər elan üçün smart skor hesabla
+      List<MapEntry<ListingModel, double>> scoredListings =
+          listings.map((listing) {
+        double score = _calculateSmartScore(listing, userPreferences);
+        return MapEntry(listing, score);
+      }).toList();
+
+      // Skora görə sırala
+      scoredListings.sort((a, b) => b.value.compareTo(a.value));
+
+      return scoredListings.map((entry) => entry.key).take(limit).toList();
+    } catch (e) {
+      print('Error in getSmartListings: $e');
+      return await getAllListings(limit: limit);
+    }
+  }
+
+  double _calculateSmartScore(
+      ListingModel listing, Map<String, double> userPreferences) {
+    // Freshness factor (40% çəki)
+    double freshnessScore = _calculateFreshnessScore(listing.createdAt) * 0.4;
+
+    // Keyfiyyət skoru (30% çəki)
+    double qualityScore = _calculateQualityScore(listing) * 0.3;
+
+    // İstifadəçi davranış skoru (30% çəki)
+    double userScore = 0.0;
+    if (userPreferences.isNotEmpty) {
+      userScore = (userPreferences[listing.category] ?? 0.0) * 0.3;
+    }
+
+    return freshnessScore + qualityScore + userScore;
+  }
+
+  // Listing operations - smart alqoritm ilə
+  Future<List<ListingModel>> getAllListings(
+      {int limit = 20, String? userId}) async {
     return getWithCacheFirst<ListingModel>(
       query: (Source source) async {
         try {
           print(
-            'FirestoreService: Getting all listings from ${source.name}...',
-          );
+              'FirestoreService: Getting smart listings from ${source.name}...');
+
+          // Smart alqoritm istifadə et
+          if (userId != null) {
+            return await getSmartListings(userId: userId, limit: limit);
+          }
+
+          // Default sıralama
           final querySnapshot = await _firestore
               .collection(AppConstants.collectionListings)
               .orderBy('createdAt', descending: true)
               .limit(limit)
               .get(GetOptions(source: source));
 
-          print(
-            'FirestoreService: Found ${querySnapshot.docs.length} documents from ${source.name}',
-          );
-
           final listings = querySnapshot.docs
-              .map((doc) {
-                try {
-                  return ListingModel.fromFirestore(doc);
-                } catch (e) {
-                  print('Error parsing listing ${doc.id}: $e');
-                  return null;
-                }
-              })
-              .where((listing) => listing != null)
-              .cast<ListingModel>()
+              .map((doc) => ListingModel.fromFirestore(doc))
               .toList();
 
-          print(
-            'FirestoreService: Successfully parsed ${listings.length} listings from ${source.name}',
-          );
           return listings;
         } catch (e) {
           print(
-            'FirestoreService: Error getting listings from ${source.name}: $e',
-          );
+              'FirestoreService: Error getting listings from ${source.name}: $e');
           if (source == Source.cache) {
-            throw e; // Cache-də xəta olsa, server-ə keçmək üçün xətanı ötür
+            throw e;
           }
           return [];
         }
@@ -197,8 +353,14 @@ class FirestoreService extends GetxService {
   Future<List<ListingModel>> searchListings(
     String query, {
     int limit = 20,
+    String? userId,
   }) async {
     try {
+      // Axtarış tarixçəsini qeyd et
+      if (userId != null) {
+        await trackSearchQuery(userId, query);
+      }
+
       // Get all listings first
       final querySnapshot = await _firestore
           .collection(AppConstants.collectionListings)
@@ -212,17 +374,24 @@ class FirestoreService extends GetxService {
 
       // Filter locally for better search results
       final searchQuery = query.toLowerCase();
-      final filteredListings = allListings
-          .where((listing) {
-            return listing.title.toLowerCase().contains(searchQuery) ||
-                listing.description.toLowerCase().contains(searchQuery) ||
-                listing.city.toLowerCase().contains(searchQuery) ||
-                listing.category.toLowerCase().contains(searchQuery);
-          })
-          .take(limit)
-          .toList();
+      final filteredListings = allListings.where((listing) {
+        return listing.title.toLowerCase().contains(searchQuery) ||
+            listing.description.toLowerCase().contains(searchQuery) ||
+            listing.city.toLowerCase().contains(searchQuery) ||
+            listing.category.toLowerCase().contains(searchQuery);
+      }).toList();
 
-      return filteredListings;
+      // Smart sıralama tətbiq et
+      if (userId != null) {
+        final userPreferences = await getUserPreferences(userId);
+        filteredListings.sort((a, b) {
+          double scoreA = _calculateSmartScore(a, userPreferences);
+          double scoreB = _calculateSmartScore(b, userPreferences);
+          return scoreB.compareTo(scoreA);
+        });
+      }
+
+      return filteredListings.take(limit).toList();
     } catch (e) {
       print('FirestoreService: Error in searchListings: $e');
       Get.snackbar('Xəta', 'Axtarış nəticələri yüklənə bilmədi');

@@ -1,5 +1,3 @@
-// ignore_for_file: unused_import
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
@@ -24,6 +22,7 @@ import 'screens/login_screen.dart';
 import 'screens/main_screen.dart';
 import 'package:flutter/services.dart';
 import 'core/localization/translations.dart';
+import 'core/utils/initial_route.dart';
 
 Future<void> _precacheShaders() async {
   // Pre-cache common shaders to prevent stutters
@@ -44,16 +43,38 @@ Future<void> main() async {
   // Initialize GetStorage
   await GetStorage.init();
 
+  // Read theme and locale from storage
+  final box = GetStorage();
+  String? themeModeStr = box.read('theme_mode');
+  String? localeStr = box.read('locale');
+
+  ThemeMode initialThemeMode;
+  if (themeModeStr == 'ThemeMode.dark') {
+    initialThemeMode = ThemeMode.dark;
+  } else if (themeModeStr == 'ThemeMode.light') {
+    initialThemeMode = ThemeMode.light;
+  } else if (themeModeStr == 'ThemeMode.system') {
+    initialThemeMode = ThemeMode.system;
+  } else {
+    initialThemeMode = ThemeMode.light;
+  }
+
+  Locale initialLocale;
+  if (localeStr == 'en') {
+    initialLocale = const Locale('en', 'US');
+  } else {
+    initialLocale = const Locale('az', 'AZ');
+  }
+
   // Initialize services
   Get.put(SecurityService(), permanent: true);
   Get.put(StorageService(), permanent: true);
   Get.put(FirestoreService(), permanent: true);
   Get.put(ListingStatsService(), permanent: true);
 
-  // Initialize new services
-
-  // Initialize AuthService and wait for auth state
-  final authService = Get.put(AuthService(), permanent: true);
+  // AuthService'i önce başlat ama navigasyon yapmasını engelle
+  final authService =
+      Get.put(AuthService(disableInitialNavigation: true), permanent: true);
 
   // Initialize controllers
   Get.put(HomeController(), permanent: true);
@@ -69,54 +90,48 @@ Future<void> main() async {
     ),
   );
 
-  // Wait a bit for auth state to initialize
-  await Future.delayed(const Duration(seconds: 2));
-
   // Remove splash screen after initialization
   FlutterNativeSplash.remove();
 
-  runApp(const MyApp());
+  runApp(MyApp(
+    initialThemeMode: initialThemeMode,
+    initialLocale: initialLocale,
+  ));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final ThemeMode initialThemeMode;
+  final Locale initialLocale;
+  const MyApp(
+      {super.key, required this.initialThemeMode, required this.initialLocale});
 
   @override
   Widget build(BuildContext context) {
-    return GetMaterialApp(
-      title: AppConstants.appName,
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.light,
-      debugShowCheckedModeBanner: false,
-      getPages: AppPages.pages,
-      translations: Messages(),
-      locale: const Locale('az', 'AZ'),
-      fallbackLocale: const Locale('en', 'US'),
-      initialRoute: _getInitialRoute(),
-      defaultTransition: Transition.cupertino,
-      transitionDuration: const Duration(milliseconds: 200),
-    );
-  }
+    return Obx(() {
+      final locale = Get.locale ?? initialLocale;
+      final themeMode = Get.isDarkMode
+          ? ThemeMode.dark
+          : (Get.isPlatformDarkMode ? ThemeMode.system : initialThemeMode);
 
-  String _getInitialRoute() {
-    // Check if intro has been shown
-    final storage = GetStorage();
-    final introShown = storage.read('intro_shown') ?? false;
-
-    if (!introShown) {
-      return '/intro';
-    }
-
-    // Check if user is already logged in
-    try {
-      final authService = Get.find<AuthService>();
-      if (authService.firebaseUser.value != null) {
-        return '/main';
+      // GetMaterialApp oluşturulduktan sonra navigasyonu etkinleştir
+      if (Get.isRegistered<AuthService>()) {
+        AuthService.to.enableNavigation();
       }
-    } catch (e) {
-      print('Error getting auth service: $e');
-    }
-    return '/login';
+
+      return GetMaterialApp(
+        title: AppConstants.appName,
+        theme: AppTheme.lightTheme,
+        darkTheme: AppTheme.darkTheme,
+        themeMode: themeMode,
+        debugShowCheckedModeBanner: false,
+        getPages: AppPages.pages,
+        translations: Messages(),
+        locale: locale,
+        fallbackLocale: const Locale('en', 'US'),
+        initialRoute: getInitialRoute(),
+        defaultTransition: Transition.cupertino,
+        transitionDuration: const Duration(milliseconds: 200),
+      );
+    });
   }
 }

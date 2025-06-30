@@ -8,6 +8,7 @@ class CustomTextField extends StatelessWidget {
   final TextInputType keyboardType;
   final ValueChanged<String> onChanged;
   final String? initialValue;
+  final int? maxLength;
 
   const CustomTextField({
     super.key,
@@ -16,6 +17,7 @@ class CustomTextField extends StatelessWidget {
     this.keyboardType = TextInputType.text,
     required this.onChanged,
     this.initialValue,
+    this.maxLength,
   });
 
   @override
@@ -37,6 +39,7 @@ class CustomTextField extends StatelessWidget {
         onChanged: onChanged,
         maxLines: maxLines,
         keyboardType: keyboardType,
+        maxLength: maxLength,
         style: GoogleFonts.poppins(color: AppColors.textPrimary, fontSize: 16),
         decoration: InputDecoration(
           hintText: hint,
@@ -47,7 +50,11 @@ class CustomTextField extends StatelessWidget {
             horizontal: 16,
             vertical: maxLines > 1 ? 16 : 14,
           ),
+          counterText: '',
         ),
+        controller: initialValue != null
+            ? TextEditingController(text: initialValue)
+            : null,
       ),
     );
   }

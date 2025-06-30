@@ -5,6 +5,7 @@ import '../controllers/profile_controller.dart';
 import '../services/auth_service.dart';
 import '../core/theme/app_colors.dart';
 import '../core/constants/app_constants.dart';
+import '../controllers/main_controller.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -132,7 +133,7 @@ class ProfileScreen extends StatelessWidget {
                   margin: const EdgeInsets.only(right: 16, top: 8),
                   child: IconButton(
                     onPressed: () {
-                      // Settings
+                      Get.toNamed('/settings');
                     },
                     icon: Container(
                       padding: const EdgeInsets.all(8),
@@ -180,12 +181,8 @@ class ProfileScreen extends StatelessWidget {
                       subtitle: 'Bəyəndiyiniz elanlar',
                       onTap: () {
                         // Navigate to favorites tab
-                        final mainController = Get.find<dynamic>();
-                        if (mainController.runtimeType.toString().contains(
-                              'MainController',
-                            )) {
-                          mainController.changeTabIndex(1);
-                        }
+                        final mainController = Get.find<MainController>();
+                        mainController.changePage(1);
                       },
                       color: AppColors.error,
                     ),

@@ -13,35 +13,69 @@ class AuthService extends GetxService {
   final GoogleSignIn _googleSignIn = GoogleSignIn();
   final GetStorage _storage = GetStorage();
 
+  // Navigasyon kontrolü için yeni değişkenler
+  final bool _disableInitialNavigation;
+  bool _navigationEnabled = false;
+
   Rx<User?> firebaseUser = Rx<User?>(null);
   Rx<UserModel?> currentUser = Rx<UserModel?>(null);
+
+  AuthService({bool disableInitialNavigation = false})
+      : _disableInitialNavigation = disableInitialNavigation;
 
   @override
   void onInit() {
     firebaseUser.bindStream(_auth.userChanges());
     ever(firebaseUser, _setInitialScreen);
     super.onInit();
+
+    // Eğer başlangıçta navigasyon devre dışı değilse, hemen etkinleştir
+    if (!_disableInitialNavigation) {
+      _navigationEnabled = true;
+    }
+  }
+
+  // Navigasyonu etkinleştiren metot
+  void enableNavigation() {
+    _navigationEnabled = true;
+    _setInitialScreen(firebaseUser.value);
   }
 
   void _setInitialScreen(User? user) async {
     try {
+      // Eğer GetMaterialApp hazır değilse veya navigasyon devre dışıysa, navigasyon yapmaya çalışmayın
+      if ((!Get.isRegistered<GetMaterialApp>() && Get.key == null) ||
+          !_navigationEnabled) {
+        print(
+            'AuthService: Navigasyon ertelendi (${_navigationEnabled ? "GetMaterialApp hazır değil" : "Navigasyon devre dışı"})');
+        return;
+      }
+
       if (user == null) {
         currentUser.value = null;
         _storage.remove(AppConstants.keyIsLoggedIn);
 
-        // Navigate to login only if not already there
-        if (Get.currentRoute != '/login') {
-          await Future.delayed(const Duration(milliseconds: 500));
-          Get.offAllNamed('/login');
+        // GetMaterialApp hazır olduğunda navigasyon yap
+        if (Get.key != null && Get.currentRoute != '/login') {
+          try {
+            await Future.delayed(const Duration(milliseconds: 500));
+            Get.offAllNamed('/login');
+          } catch (e) {
+            print('AuthService: Login navigasyon hatası: $e');
+          }
         }
       } else {
         await _loadUserData(user);
         _storage.write(AppConstants.keyIsLoggedIn, true);
 
-        // Navigate to main only if not already there
-        if (Get.currentRoute != '/main') {
-          await Future.delayed(const Duration(milliseconds: 500));
-          Get.offAllNamed('/main');
+        // GetMaterialApp hazır olduğunda navigasyon yap
+        if (Get.key != null && Get.currentRoute != '/main') {
+          try {
+            await Future.delayed(const Duration(milliseconds: 500));
+            Get.offAllNamed('/main');
+          } catch (e) {
+            print('AuthService: Main navigasyon hatası: $e');
+          }
         }
       }
     } catch (e) {

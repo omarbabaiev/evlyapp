@@ -68,9 +68,12 @@ class MainScreen extends GetView<MainController> {
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: controller.onWillPop,
-      child: GetBuilder<MainController>(
-        builder: (controller) => Scaffold(
-          body: Obx(() => _buildPage(controller.currentIndex.value)),
+      child: Obx(() {
+        final isBottomBarVisible = controller.isBottomBarVisible.value;
+        final currentIndex = controller.currentIndex.value;
+
+        return Scaffold(
+          body: _buildPage(currentIndex),
           floatingActionButton: Container(
             width: 64,
             height: 64,
@@ -103,83 +106,83 @@ class MainScreen extends GetView<MainController> {
               ),
             ),
           ),
-          floatingActionButtonLocation: controller.isBottomBarVisible.value
+          floatingActionButtonLocation: isBottomBarVisible
               ? FloatingActionButtonLocation.centerDocked
               : FloatingActionButtonLocation.endFloat,
-          bottomNavigationBar: Obx(() => AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
-                height: controller.isBottomBarVisible.value ? 70 : 0,
-                child: AnimatedOpacity(
-                  duration: const Duration(milliseconds: 300),
-                  opacity: controller.isBottomBarVisible.value ? 1.0 : 0.0,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 1,
-                          offset: const Offset(0, -.2),
+          bottomNavigationBar: AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            height: isBottomBarVisible ? 70 : 0,
+            child: AnimatedOpacity(
+              duration: const Duration(milliseconds: 300),
+              opacity: isBottomBarVisible ? 1.0 : 0.0,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 1,
+                      offset: const Offset(0, -.2),
+                    ),
+                  ],
+                ),
+                child: BottomAppBar(
+                  height: 70,
+                  color: Colors.white,
+                  notchMargin: 10,
+                  shape: const CircularNotchedRectangle(),
+                  elevation: 0,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        _buildNavItem(
+                          context: context,
+                          icon: Icons.home_outlined,
+                          selectedIcon: Icons.home_rounded,
+                          label: 'Ana Səhifə',
+                          index: 0,
+                          currentIndex: currentIndex,
+                          onTap: controller.changePage,
+                        ),
+                        _buildNavItem(
+                          context: context,
+                          icon: Icons.favorite_border_rounded,
+                          selectedIcon: Icons.favorite_rounded,
+                          label: 'Sevimlilər',
+                          index: 1,
+                          currentIndex: currentIndex,
+                          onTap: controller.changePage,
+                        ),
+                        const SizedBox(width: 60), // Space for FAB
+                        _buildNavItem(
+                          context: context,
+                          icon: Icons.chat_bubble_outline_rounded,
+                          selectedIcon: Icons.chat_bubble_rounded,
+                          label: 'Mesajlar',
+                          index: 2,
+                          currentIndex: currentIndex,
+                          onTap: controller.changePage,
+                        ),
+                        _buildNavItem(
+                          context: context,
+                          icon: Icons.person_outline_rounded,
+                          selectedIcon: Icons.person_rounded,
+                          label: 'Profil',
+                          index: 3,
+                          currentIndex: currentIndex,
+                          onTap: controller.changePage,
                         ),
                       ],
                     ),
-                    child: BottomAppBar(
-                      height: 70,
-                      color: Colors.white,
-                      notchMargin: 10,
-                      shape: const CircularNotchedRectangle(),
-                      elevation: 0,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: [
-                            _buildNavItem(
-                              context: context,
-                              icon: Icons.home_outlined,
-                              selectedIcon: Icons.home_rounded,
-                              label: 'Ana Səhifə',
-                              index: 0,
-                              currentIndex: controller.currentIndex.value,
-                              onTap: controller.changePage,
-                            ),
-                            _buildNavItem(
-                              context: context,
-                              icon: Icons.favorite_border_rounded,
-                              selectedIcon: Icons.favorite_rounded,
-                              label: 'Sevimlilər',
-                              index: 1,
-                              currentIndex: controller.currentIndex.value,
-                              onTap: controller.changePage,
-                            ),
-                            const SizedBox(width: 60), // Space for FAB
-                            _buildNavItem(
-                              context: context,
-                              icon: Icons.chat_bubble_outline_rounded,
-                              selectedIcon: Icons.chat_bubble_rounded,
-                              label: 'Mesajlar',
-                              index: 2,
-                              currentIndex: controller.currentIndex.value,
-                              onTap: controller.changePage,
-                            ),
-                            _buildNavItem(
-                              context: context,
-                              icon: Icons.person_outline_rounded,
-                              selectedIcon: Icons.person_rounded,
-                              label: 'Profil',
-                              index: 3,
-                              currentIndex: controller.currentIndex.value,
-                              onTap: controller.changePage,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
                   ),
                 ),
-              )),
-        ),
-      ),
+              ),
+            ),
+          ),
+        );
+      }),
     );
   }
 

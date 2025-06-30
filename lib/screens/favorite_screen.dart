@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import '../controllers/favorite_controller.dart';
 import '../widgets/listing_card.dart';
@@ -26,7 +27,7 @@ class FavoriteScreen extends GetView<FavoriteController> {
         elevation: 0,
         title: Text(
           'Sevimlilər',
-          style: TextStyle(
+          style: GoogleFonts.poppins(
             fontSize: 18,
             fontWeight: FontWeight.w600,
             color: Theme.of(context).textTheme.titleMedium?.color,

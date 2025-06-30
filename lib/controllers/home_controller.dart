@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../models/listing_model.dart';
 import '../services/firestore_service.dart';
+import '../services/auth_service.dart';
 import '../core/constants/app_constants.dart';
 
 class HomeController extends GetxController {
@@ -42,10 +43,14 @@ class HomeController extends GetxController {
       print('HomeController: Loading listings...');
 
       List<ListingModel> loadedListings;
+      final currentUser = AuthService.to.currentUser.value;
 
       // Kateqoriyaya görə yüklə
       if (selectedCategory.value == 'Hamısı') {
-        loadedListings = await FirestoreService.to.getAllListings();
+        // Smart alqoritm istifadə et
+        loadedListings = await FirestoreService.to.getAllListings(
+          userId: currentUser?.uid,
+        );
       } else {
         loadedListings = await FirestoreService.to.getListingsByCategory(
           selectedCategory.value,
@@ -78,13 +83,34 @@ class HomeController extends GetxController {
 
     try {
       isLoading.value = true;
-      final results = await FirestoreService.to.searchListings(query);
+      final currentUser = AuthService.to.currentUser.value;
+
+      final results = await FirestoreService.to.searchListings(
+        query,
+        userId: currentUser?.uid,
+      );
       listings.value = results;
     } catch (e) {
       print('HomeController: Error searching listings: $e');
       Get.snackbar('Xəta', 'Axtarış zamanı xəta baş verdi');
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  // İstifadəçi davranış izləmə
+  Future<void> trackListingView(ListingModel listing) async {
+    try {
+      final currentUser = AuthService.to.currentUser.value;
+      if (currentUser != null) {
+        await FirestoreService.to.trackUserView(
+          currentUser.uid,
+          listing.id,
+          listing.category,
+        );
+      }
+    } catch (e) {
+      print('HomeController: Error tracking listing view: $e');
     }
   }
 

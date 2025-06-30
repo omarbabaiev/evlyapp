@@ -256,7 +256,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                   // Image counter
                   if (listing.images.length > 1)
                     Positioned(
-                      top: 20,
+                      bottom: 20,
                       right: 20,
                       child: Container(
                         padding: const EdgeInsets.symmetric(
@@ -264,7 +264,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                           vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.6),
+                          color: Colors.black.withOpacity(0.3),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
@@ -272,7 +272,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                           style: GoogleFonts.poppins(
                             color: Colors.white,
                             fontSize: 12,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                       ),
@@ -438,31 +438,82 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                           'Xüsusiyyətlər',
                           style: GoogleFonts.poppins(
                             color: AppColors.textPrimary,
-                            fontSize: 16,
+                            fontSize: 18,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                         const SizedBox(height: 16),
+
+                        // Tag-lar (önemli bilgiler için)
+                        Wrap(
+                          spacing: 12,
+                          runSpacing: 12,
+                          children: [
+                            if (listing.details != null &&
+                                listing.details!['listingType'] != null)
+                              _buildFeatureTag(
+                                listing.details!['listingType'],
+                                Icons.sell_outlined,
+                                AppColors.primary,
+                              ),
+                            if (listing.details != null &&
+                                listing.details!['roomCount'] != null &&
+                                listing.details!['roomCount'] > 0)
+                              _buildFeatureTag(
+                                '${listing.details!['roomCount']} otaq',
+                                Icons.bed_outlined,
+                                AppColors.success,
+                              ),
+                            if (listing.details != null &&
+                                listing.details!['area'] != null)
+                              _buildFeatureTag(
+                                '${listing.details!['area']} m²',
+                                Icons.square_foot_outlined,
+                                AppColors.accent,
+                              ),
+                            if (listing.details != null &&
+                                listing.details!['isNewBuilding'] != null)
+                              _buildFeatureTag(
+                                listing.details!['isNewBuilding']
+                                    ? 'Yeni tikili'
+                                    : 'Köhnə tikili',
+                                Icons.apartment_outlined,
+                                listing.details!['isNewBuilding']
+                                    ? AppColors.success
+                                    : AppColors.warning,
+                              ),
+                            if (listing.details != null &&
+                                listing.details!['hasRepair'] != null)
+                              _buildFeatureTag(
+                                listing.details!['hasRepair']
+                                    ? 'Təmirli'
+                                    : 'Təmirsiz',
+                                Icons.build_outlined,
+                                listing.details!['hasRepair']
+                                    ? AppColors.success
+                                    : AppColors.error,
+                              ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 24),
+
+                        // Detailed Features
                         _buildFeatureItem(
                           icon: Icons.location_on_outlined,
                           title: 'Ünvan',
-                          value: 'Bakı şəhəri, Yasamal rayonu',
+                          value:
+                              '${listing.city}${listing.district != null ? ", ${listing.district}" : ""}',
                         ),
-                        _buildFeatureItem(
-                          icon: Icons.square_foot_outlined,
-                          title: 'Sahə',
-                          value: '120 m²',
-                        ),
-                        _buildFeatureItem(
-                          icon: Icons.bed_outlined,
-                          title: 'Otaq sayı',
-                          value: '3 otaq',
-                        ),
-                        _buildFeatureItem(
-                          icon: Icons.wifi,
-                          title: 'WiFi',
-                          value: 'Mövcuddur',
-                        ),
+                        if (listing.details != null &&
+                            listing.details!['floor'] != null &&
+                            listing.details!['floor'] > 0)
+                          _buildFeatureItem(
+                            icon: Icons.layers_outlined,
+                            title: 'Mərtəbə',
+                            value:
+                                '${listing.details!['floor']}/${listing.details!['totalFloors'] ?? "?"} mərtəbə',
+                          ),
                       ],
                     ),
                   ),
@@ -553,19 +604,6 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
           ),
 
           // Əlaqə düyməsi
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: ElevatedButton.icon(
-                onPressed: () => _makePhoneCall(listing.phone),
-                icon: Icon(Icons.phone),
-                label: Text('Zəng et'),
-                style: ElevatedButton.styleFrom(
-                  minimumSize: Size(double.infinity, 50),
-                ),
-              ),
-            ),
-          ),
         ],
       ),
 
@@ -665,7 +703,15 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
           _buildInfoRow('Elan ID:', listing.id),
           _buildInfoRow('Yaradılma tarixi:',
               AppDateUtils.DateUtils.formatDateTime(listing.createdAt)),
-          _buildInfoRow('Telefon:', listing.phone),
+          if (listing.ownerName != null && listing.ownerName!.isNotEmpty)
+            _buildInfoRow('Satıcı:', listing.ownerName!),
+          if (listing.phone.isNotEmpty)
+            _buildInfoRow('Telefon:', listing.phone),
+          if (listing.ownerEmail != null && listing.ownerEmail!.isNotEmpty)
+            _buildInfoRow('E-mail:', listing.ownerEmail!),
+          if (listing.details != null && listing.details!['isOwner'] != null)
+            _buildInfoRow('Elan sahibi:',
+                listing.details!['isOwner'] ? 'Sahibkar' : 'Vasitəçi'),
           if (isOwner) ...[
             const SizedBox(height: 16),
             SizedBox(
@@ -854,6 +900,32 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
               color: AppColors.textPrimary,
               fontSize: 14,
               fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFeatureTag(String label, IconData icon, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withOpacity(0.3), width: 1),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: color, size: 18),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: GoogleFonts.poppins(
+              color: color,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ],

@@ -8,6 +8,7 @@ import '../services/auth_service.dart';
 import '../core/theme/app_colors.dart';
 import '../core/utils/date_utils.dart' as AppDateUtils;
 import '../controllers/listing_controller.dart';
+import '../controllers/home_controller.dart';
 import '../core/constants/app_images.dart';
 
 class ListingCard extends StatelessWidget {
@@ -46,6 +47,15 @@ class ListingCard extends StatelessWidget {
                       colorText: Colors.white,
                     );
                     return;
+                  }
+
+                  // User behavior tracking
+                  try {
+                    final homeController = Get.find<HomeController>();
+                    homeController.trackListingView(listing);
+                  } catch (e) {
+                    print(
+                        'ListingCard: Error getting HomeController for tracking: $e');
                   }
 
                   Get.toNamed(
@@ -165,9 +175,9 @@ class ListingCard extends StatelessWidget {
               ),
               // Content
               Expanded(
-                flex: 2,
+                flex: 3,
                 child: Padding(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(8),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -182,7 +192,7 @@ class ListingCard extends StatelessWidget {
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 2),
                       // Price
                       Text(
                         '${listing.price.toStringAsFixed(0)} AZN',
@@ -193,43 +203,57 @@ class ListingCard extends StatelessWidget {
                         ),
                       ),
                       const Spacer(),
-                      // Category
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      // Location and Date Info
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          // Şəhər məlumatı
                           Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
+                              horizontal: 6,
+                              vertical: 3,
                             ),
                             decoration: BoxDecoration(
-                              color: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium
-                                  ?.color
-                                  ?.withOpacity(.03),
-                              borderRadius: BorderRadius.circular(8),
+                              color: AppColors.primary.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
-                              '${listing.city} • ${AppDateUtils.DateUtils.formatDateTime(listing.updatedAt ?? DateTime.now())}',
+                              '${listing.city}${listing.district != null ? ', ${listing.district}' : ''}',
                               style: GoogleFonts.poppins(
+                                color: AppColors.primary,
                                 fontSize: 10,
-                                color: Theme.of(context)
-                                    .textTheme
-                                    .bodyMedium
-                                    ?.color
-                                    ?.withOpacity(.5),
                                 fontWeight: FontWeight.w500,
                               ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                          Icon(
-                            Icons.arrow_forward_ios,
-                            size: 12,
-                            color: AppColors.gray400,
+                          const SizedBox(height: 3),
+                          // Tarix məlumatı
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.gray50,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              _formatDateShort(listing.createdAt),
+                              style: GoogleFonts.poppins(
+                                color: AppColors.textMuted,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
                         ],
                       ),
+                      const SizedBox(height: 2),
+                      // Arrow
                     ],
                   ),
                 ),
@@ -239,5 +263,42 @@ class ListingCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _formatDate(DateTime date) {
+    return AppDateUtils.DateUtils.formatDateTime(date);
+  }
+
+  String _formatDateShort(DateTime date) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final dateToCheck = DateTime(date.year, date.month, date.day);
+
+    if (dateToCheck == today) {
+      return 'Bugün';
+    } else {
+      final difference = now.difference(date).inDays;
+      if (difference == 1) {
+        return 'Dünən';
+      } else {
+        // Format as "23 May, 2020"
+        final months = [
+          '',
+          'Yanvar',
+          'Fevral',
+          'Mart',
+          'Aprel',
+          'May',
+          'İyun',
+          'İyul',
+          'Avqust',
+          'Sentyabr',
+          'Oktyabr',
+          'Noyabr',
+          'Dekabr'
+        ];
+        return '${date.day} ${months[date.month]}, ${date.year}';
+      }
+    }
   }
 }

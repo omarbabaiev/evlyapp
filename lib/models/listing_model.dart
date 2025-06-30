@@ -7,14 +7,18 @@ class ListingModel {
   final String description;
   final String category;
   final String city;
+  final String? district;
   final double price;
   final List<String> images;
   final String phone;
+  final String? ownerName;
+  final String? ownerEmail;
   final DateTime createdAt;
   final DateTime? updatedAt;
   final String? userName;
   final double? latitude;
   final double? longitude;
+  final Map<String, dynamic>? details;
 
   ListingModel({
     required this.id,
@@ -23,14 +27,18 @@ class ListingModel {
     required this.description,
     required this.category,
     required this.city,
+    this.district,
     required this.price,
     required this.images,
     required this.phone,
+    this.ownerName,
+    this.ownerEmail,
     required this.createdAt,
     this.updatedAt,
     this.userName,
     this.latitude,
     this.longitude,
+    this.details,
   }) {
     // Temporarily allow empty ID for creation
     // if (id.isEmpty) {
@@ -56,9 +64,12 @@ class ListingModel {
       description: data['description'] ?? '',
       category: data['category'] ?? '',
       city: data['city'] ?? '',
+      district: data['district'],
       price: (data['price'] ?? 0).toDouble(),
       images: List<String>.from(data['images'] ?? []),
       phone: data['phone'] ?? '',
+      ownerName: data['ownerName'],
+      ownerEmail: data['ownerEmail'],
       createdAt: data['createdAt'] is Timestamp
           ? (data['createdAt'] as Timestamp).toDate()
           : DateTime.fromMillisecondsSinceEpoch(data['createdAt'] ?? 0),
@@ -70,6 +81,7 @@ class ListingModel {
       userName: data['userName'],
       latitude: data['latitude']?.toDouble(),
       longitude: data['longitude']?.toDouble(),
+      details: data['details'] as Map<String, dynamic>?,
     );
   }
 
@@ -80,14 +92,18 @@ class ListingModel {
       'description': description,
       'category': category,
       'city': city,
+      'district': district,
       'price': price,
       'images': images,
       'phone': phone,
+      'ownerName': ownerName,
+      'ownerEmail': ownerEmail,
       'createdAt': createdAt,
       'updatedAt': FieldValue.serverTimestamp(),
       'userName': userName,
       'latitude': latitude,
       'longitude': longitude,
+      'details': details,
     };
   }
 
@@ -98,14 +114,18 @@ class ListingModel {
     String? description,
     String? category,
     String? city,
+    String? district,
     double? price,
     List<String>? images,
     String? phone,
+    String? ownerName,
+    String? ownerEmail,
     DateTime? createdAt,
     DateTime? updatedAt,
     String? userName,
     double? latitude,
     double? longitude,
+    Map<String, dynamic>? details,
   }) {
     return ListingModel(
       id: id ?? this.id,
@@ -114,14 +134,18 @@ class ListingModel {
       description: description ?? this.description,
       category: category ?? this.category,
       city: city ?? this.city,
+      district: district ?? this.district,
       price: price ?? this.price,
       images: images ?? this.images,
       phone: phone ?? this.phone,
+      ownerName: ownerName ?? this.ownerName,
+      ownerEmail: ownerEmail ?? this.ownerEmail,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       userName: userName ?? this.userName,
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
+      details: details ?? this.details,
     );
   }
 }
